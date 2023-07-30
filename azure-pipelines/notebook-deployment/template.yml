@@ -9,6 +9,8 @@ parameters:
     type: string
     default: ""
   - name: pythonInstalled
+    type: boolean
+    default: false
 
 jobs:
   - job: import_notebook

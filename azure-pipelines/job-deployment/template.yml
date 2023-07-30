@@ -1,0 +1,60 @@
+parameters:
+  - name: workspaceAddress
+    type: string
+    default: ""
+  - name: accessToken
+    type: string
+    default: ""
+  - name: jobDirectory
+    type: string
+    default: ""
+  - name: workingDirectory
+    type: string
+    default: ""
+  - name: pythonInstalled
+    type: boolean
+    default: false
+
+jobs:
+  - job: deploy_jobs
+    displayName: Deploy Databricks Workflow Jobs
+    steps:
+      - checkout: self
+
+      - task: UsePythonVersion@0
+        condition: eq('${{ parameters.pythonInstalled }}', 'false')
+        displayName: "Install Python Version"
+        inputs:
+          versionSpec: "3.10"
+          addToPath: true
+          architecture: "x64"
+
+      - script: |
+          pip3 install --upgrade pip
+          pip3 install -r ${{parameters.workingDirectory}}/requirements.txt
+        displayName: "Install Python dependencies"
+
+      # This task if for cases when `existing_cluster_id` properties are used and need to be replaced for environment specific deployments
+      - task: replacetokens@5
+        displayName: "Replace Tokenized Variables"
+        inputs:
+          targetFiles: |
+            *.json
+          encoding: "auto"
+          writeBOM: true
+          actionOnMissing: "fail"
+          keepToken: false
+          tokenPrefix: "#{"
+          tokenSuffix: "}#"
+          rootDirectory: $(System.DefaultWorkingDirectory)${{parameters.jobDirectory}}
+
+      - task: PythonScript@0
+        displayName: Execute Python script
+        inputs:
+          scriptSource: "filePath"
+          scriptPath: "${{parameters.workingDirectory}}/deploy_jobs.py"
+        env:
+          DATABRICKS_HOST: ${{parameters.workspaceAddress}}
+          DATABRICKS_TOKEN: ${{parameters.accessToken}}
+          DIR_PATH: ${{parameters.jobDirectory}}
+          DATABRICKS_JOBS_API_VERSION: "2.1"

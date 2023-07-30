@@ -1,0 +1,18 @@
+trigger: none
+
+pool:
+  name: default
+
+stages:
+  - stage: DEV
+    displayName: "Databricks Job Deployment"
+    variables:
+      - group: dev-variables
+      - group: project-variables
+    jobs:
+      - template: template.yml
+        parameters:
+          workspaceAddress: $(Databricks.Workspace.Address)
+          accessToken: $(Databricks.AccessToken)
+          jobDirectory: /jobs
+          workingDirectory: $(System.DefaultWorkingDirectory)
