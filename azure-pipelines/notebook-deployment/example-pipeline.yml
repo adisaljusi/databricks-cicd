@@ -1,0 +1,19 @@
+# Configure trigger here
+trigger: none
+
+pool:
+  name: default
+
+stages:
+  - stage: DEV # environment name
+    displayName: "Import notebooks to Databricks Workspace [DEV]"
+    variables:
+      - group: dev-variables
+      - group: project-variables
+    jobs:
+      - template: template.yml
+        parameters:
+          workspaceAddress: $(Databricks.Workspace.Address)
+          accessToken: $(Databricks.AccessToken)
+          notebookDirectory: "notebooks"
+          pythonInstalled: false
